@@ -16,9 +16,15 @@ public class CanvasController : MonoBehaviour
     [Header("Login Page")]
     public TMPro.TMP_InputField login_loginInput;
     public TMPro.TMP_InputField login_passwordInput;
+    //reset password UI
+    public GameObject login_passwordResetText;
+    public GameObject login_mailPasswordInputField;
+    public GameObject login_submitButton;
+    public GameObject login_passwordResetMailSent;
+    public bool isHiden;
     //login canvas particular
-    public GameObject accountCreatedText;
-    public GameObject LogInErrorMessage;
+    public GameObject login_accountCreatedText;
+    public GameObject login_LogInErrorMessage;
 
 
     [Header("Sign Up Page")]
@@ -29,7 +35,16 @@ public class CanvasController : MonoBehaviour
     //sign up canvas particular
     public GameObject signUpErrorMessage;
     
+
+    [Header("Logged Page")]
+    public TMPro.TextMeshProUGUI logged_name;
+    public TMPro.TextMeshProUGUI logged_mail;
+
+
     public DataBase dataBase;
+
+    public string currentUser;
+
 
     void Start()
     {
@@ -56,10 +71,7 @@ public class CanvasController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.KeypadEnter))
         {
-            //ShowDataBaseContent(dataBase);
-            mono_gmail.SendMail("testunity2037@gmail.com", "loginsystem2037",
-                "axel.tetart@gmail.com",
-                " :) ", "JE TEST MA FONCTION DE SPAM !");
+            ShowDataBaseContent(dataBase);
         }
     }
 
@@ -91,12 +103,15 @@ public class CanvasController : MonoBehaviour
                     if (user.Value.Item2 == login_passwordInput.text)
                     {
                         ShowLoggedCanvas();
+                        currentUser = user.Key;
+                        logged_name.text = user.Key;
+                        logged_mail.text = user.Value.Item1;
                         return;
                     }
                 }
             }
-            ShowError(LogInErrorMessage, "Invalid inputs...");
         }
+        ShowError(login_LogInErrorMessage, "Invalid inputs...");
     }
 
 
@@ -112,7 +127,7 @@ public class CanvasController : MonoBehaviour
                 dataBase.dataBase.Add(signUp_loginInput.text, new Tuple<string, string>(signUp_mailAddressInput.text, signUp_passwordInput.text));
                 SaveSystem.SaveDataBase(dataBase);
                 HideSignUpCanvas();
-                accountCreatedText.SetActive(true);
+                login_accountCreatedText.SetActive(true);
             }
             catch (Exception)
             {
@@ -129,6 +144,17 @@ public class CanvasController : MonoBehaviour
     public void LogOut()
     {
         HideLoggedCanvas();
+    }
+
+    public void SubmitPasswordResetRequest()
+    {
+        GameObject destinationMail = login_mailPasswordInputField.transform.GetChild(0).transform.Find("Text").gameObject;
+        
+        mono_gmail.SendMail("testunity2037@gmail.com", "loginsystem2037",
+        destinationMail.GetComponent<TMPro.TextMeshProUGUI>().text,
+        "Password reset request", "Normaly in this mail you should find a link to a password reset page but I don't have the skills to do that");
+
+        login_passwordResetMailSent.SetActive(true);
     }
 
 
@@ -151,11 +177,20 @@ public class CanvasController : MonoBehaviour
     public void ShowSignUpCanvas()
     {
         //clear the fields of the login canvas
-        accountCreatedText.SetActive(false);
-        LogInErrorMessage.SetActive(false);
+        login_accountCreatedText.SetActive(false);
+        login_LogInErrorMessage.SetActive(false);
         //clear all the input fields
         login_loginInput.ClearTMProInputField();
         login_passwordInput.ClearTMProInputField();
+        //hide password reset content
+        login_passwordResetText.SetActive(true);
+        login_mailPasswordInputField.SetActive(true);
+        login_submitButton.SetActive(true);
+
+        if (!isHiden)
+        {
+            ShowResetPasswordUI();
+        }
 
         signUpCanvas.SetActive(true);
     }
@@ -163,15 +198,45 @@ public class CanvasController : MonoBehaviour
     public void ShowLoggedCanvas()
     {
         //clear the fields of the login canvas
-        accountCreatedText.SetActive(false);
-        LogInErrorMessage.SetActive(false);
+        login_accountCreatedText.SetActive(false);
+        login_LogInErrorMessage.SetActive(false);
         //clear all the input fields
         login_loginInput.ClearTMProInputField();
         login_passwordInput.ClearTMProInputField();
+        //hide password reset content
+        login_passwordResetText.SetActive(true);
+        login_mailPasswordInputField.SetActive(true);
+        login_submitButton.SetActive(true);
+
+        if (!isHiden)
+        {
+            ShowResetPasswordUI();
+        }
 
         loggedCanvas.SetActive(true);
     }
     
+    public void ShowResetPasswordUI()
+    {
+        if (isHiden)
+        {
+            isHiden = !isHiden;
+            login_passwordResetText.SetActive(true);
+            login_mailPasswordInputField.SetActive(true);
+            login_submitButton.SetActive(true);
+        }
+        else
+        {
+            isHiden = !isHiden;
+            GameObject passwordText = login_mailPasswordInputField.transform.GetChild(0).transform.Find("Text").gameObject;
+            passwordText.GetComponent<TMPro.TextMeshProUGUI>().text = "";
+            login_passwordResetText.SetActive(false);
+            login_mailPasswordInputField.SetActive(false);
+            login_submitButton.SetActive(false);
+        }
+
+    }
+
     public void HideSignUpCanvas()
     {
         signUpErrorMessage.SetActive(false);
@@ -187,6 +252,8 @@ public class CanvasController : MonoBehaviour
     public void HideLoggedCanvas()
     {
         //clear all the fields
+        logged_name.text = "";
+        logged_mail.text = "";
         loggedCanvas.SetActive(false);
     }
 
