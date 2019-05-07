@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 public class CanvasController : MonoBehaviour
 {
     [Header("Canvas")]
@@ -16,8 +17,8 @@ public class CanvasController : MonoBehaviour
     public TMPro.TMP_InputField login_loginInput;
     public TMPro.TMP_InputField login_passwordInput;
     //login canvas particular
-    public TMPro.TextMeshProUGUI accountCreatedText;
-    public TMPro.TextMeshProUGUI wrongLoginOrPasswordText;
+    public GameObject accountCreatedText;
+    public GameObject LogInErrorMessage;
 
 
     [Header("Sign Up Page")]
@@ -26,11 +27,8 @@ public class CanvasController : MonoBehaviour
     public TMPro.TMP_InputField signUp_passwordInput;
     public TMPro.TMP_InputField signUp_passwordConfirmInput;
     //sign up canvas particular
-    public TMPro.TextMeshProUGUI checkTheField;
-
-
-
-
+    public GameObject signUpErrorMessage;
+    
     public DataBase dataBase;
 
     void Start()
@@ -38,6 +36,8 @@ public class CanvasController : MonoBehaviour
         login_passwordInput.contentType = TMPro.TMP_InputField.ContentType.Password;
         signUp_passwordInput.contentType = TMPro.TMP_InputField.ContentType.Password;
         signUp_passwordConfirmInput.contentType = TMPro.TMP_InputField.ContentType.Password;
+
+        signUp_mailAddressInput.characterValidation = TMPro.TMP_InputField.CharacterValidation.EmailAddress;
 
         SaveSystem.InitializeBase();
         try
@@ -58,9 +58,12 @@ public class CanvasController : MonoBehaviour
         {
             ShowDataBaseContent(dataBase);
         }
-
     }
 
+    /// <summary>
+    /// show the content of the database
+    /// </summary>
+    /// <param name="dataBase"></param>
     void ShowDataBaseContent(DataBase dataBase)
     {
         Debug.Log("Number of User : " + dataBase.dataBase.Count);
@@ -84,13 +87,12 @@ public class CanvasController : MonoBehaviour
                 {
                     if (user.Value.Item2 == login_passwordInput.text)
                     {
-                        Debug.Log("login successful !");
                         ShowLoggedCanvas();
                         return;
                     }
                 }
             }
-            Debug.Log("Wrong login or password");
+            ShowError(LogInErrorMessage, "Invalid inputs...");
         }
     }
 
@@ -99,13 +101,15 @@ public class CanvasController : MonoBehaviour
     {
         if (signUp_loginInput.text != string.Empty && signUp_mailAddressInput.text != string.Empty
             && signUp_passwordInput.text != string.Empty && signUp_passwordConfirmInput.text != string.Empty
-            && signUp_passwordInput.text == signUp_passwordConfirmInput.text && signUp_loginInput.text != signUp_passwordInput.text)
+            && signUp_passwordInput.text == signUp_passwordConfirmInput.text && signUp_loginInput.text != signUp_passwordInput.text
+            && !dataBase.dataBase.ContainsKey(signUp_loginInput.text))
         {
             try
             {
                 dataBase.dataBase.Add(signUp_loginInput.text, new Tuple<string, string>(signUp_mailAddressInput.text, signUp_passwordInput.text));
+                SaveSystem.SaveDataBase(dataBase);
                 HideSignUpCanvas();
-
+                accountCreatedText.SetActive(true);
             }
             catch (Exception)
             {
@@ -113,26 +117,73 @@ public class CanvasController : MonoBehaviour
                 throw;
             }
         }
+        else
+        {
+            ShowError(signUpErrorMessage, "Invalid fields or user already exists");
+        }
+    }
+
+    public void LogOut()
+    {
+        HideLoggedCanvas();
     }
 
 
+    /// <summary>
+    /// for a given text mesh pro GameObject, set it active and show the error message
+    /// </summary>
+    /// <param name="textError"></param>
+    /// <param name="_errorMessage"></param>
+    public void ShowError(GameObject textError, string _errorMessage)
+    {
+        textError.SetActive(true);
+        textError.GetComponent<TMPro.TextMeshProUGUI>().text = _errorMessage;
+    }
+    
+
+    /// <summary>
+    /// show / hide functions of the different canvas ===========================================================================================
+    /// </summary>
+    
     public void ShowSignUpCanvas()
     {
+        //clear the fields of the login canvas
+        accountCreatedText.SetActive(false);
+        LogInErrorMessage.SetActive(false);
+        //clear all the input fields
+        login_loginInput.ClearTMProInputField();
+        login_passwordInput.ClearTMProInputField();
+
         signUpCanvas.SetActive(true);
     }
 
     public void ShowLoggedCanvas()
     {
+        //clear the fields of the login canvas
+        accountCreatedText.SetActive(false);
+        LogInErrorMessage.SetActive(false);
+        //clear all the input fields
+        login_loginInput.ClearTMProInputField();
+        login_passwordInput.ClearTMProInputField();
+
         loggedCanvas.SetActive(true);
     }
-
+    
     public void HideSignUpCanvas()
     {
+        signUpErrorMessage.SetActive(false);
+        //clear all the input fields
+        signUp_loginInput.ClearTMProInputField();
+        signUp_mailAddressInput.ClearTMProInputField();
+        signUp_passwordInput.ClearTMProInputField();
+        signUp_passwordConfirmInput.ClearTMProInputField();
+
         signUpCanvas.SetActive(false);
     }
 
     public void HideLoggedCanvas()
     {
+        //clear all the fields
         loggedCanvas.SetActive(false);
     }
 
