@@ -187,7 +187,7 @@ public class CanvasController : MonoBehaviour
         login_mailPasswordInputField.SetActive(true);
         login_submitButton.SetActive(true);
 
-        if (!isHiden)
+        if (isHiden == false)
         {
             ShowResetPasswordUI();
         }
@@ -208,7 +208,7 @@ public class CanvasController : MonoBehaviour
         login_mailPasswordInputField.SetActive(true);
         login_submitButton.SetActive(true);
 
-        if (!isHiden)
+        if (isHiden == false)
         {
             ShowResetPasswordUI();
         }
